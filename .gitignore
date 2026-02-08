@@ -1,0 +1,25 @@
+# API Keys (keep template, but don't commit real keys)
+# api_key.py
+
+# Output folders
+outputs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

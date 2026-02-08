@@ -1,0 +1,12 @@
+# Core dependencies
+pandas>=2.0.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Gemini AI
+google-generativeai>=0.3.0
+
+# File loading (optional - install when needed)
+openpyxl>=3.1.0      # For Excel files (.xlsx)
+pdfplumber>=0.9.0    # For PDF files
