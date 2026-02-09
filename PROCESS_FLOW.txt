@@ -1,0 +1,209 @@
+================================================================================
+                    SURVEY ANALYZER - PROCESS FLOW DOCUMENTATION
+================================================================================
+
+1. DATA FLOW
+================================================================================
+
+INPUT → PROCESSING → AI ANALYSIS → OUTPUT
+
+┌─────────────┐
+│ Input Data  │  CSV/Excel/PDF file OR dummy sample data
+│ (150 rows)  │  Contains: satisfaction, quality, service, value, NPS, etc.
+└──────┬──────┘
+       │
+       ▼
+┌──────────────────┐
+│ DataLoader       │  Loads file → Converts to pandas DataFrame
+│ (data_loader.py) │  Auto-detects format (CSV/Excel/PDF)
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ StatisticsCalc   │  Calculates: averages, NPS, percentiles, segments
+│ (statistics.py)  │  Output: Dictionary with 20+ metrics
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ VisualizationGen │  Creates 8 charts (histograms, bar charts, pie, heatmap)
+│ (visualizations) │  Saves as PNG image
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ Gemini AI API    │  4 API calls:
+│ (llm_providers)  │  1. Executive Summary
+│                  │  2. Trend Analysis
+│                  │  3. Strategic Recommendations
+│                  │  4. Output Explanation
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ ReportGenerator  │  Combines stats + AI insights → Text report
+│ (report_gen)     │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│ Output Folder    │  Timestamped folder with 7 files:
+│ (outputs/)       │  • survey_report.txt (with AI insights)
+│                  │  • output_explanation.txt (AI-written)
+│                  │  • survey_visualizations.png (8 charts)
+│                  │  • age_group_analysis.csv
+│                  │  • regional_analysis.csv
+│                  │  • survey_raw_data.csv
+│                  │  • statistics.json
+└──────────────────┘
+
+
+2. TECHNICAL FLOW
+================================================================================
+
+EXECUTION STEPS (main.py → analyzer.py):
+
+Step 1: INITIALIZATION
+  ├─ Check packages (pandas, numpy, matplotlib, seaborn, google-generativeai)
+  ├─ Check Gemini API key (from api_key.py)
+  ├─ Create timestamped output folder
+  └─ Initialize SurveyAnalyzer class
+
+Step 2: DATA LOADING
+  ├─ If file path provided → Load from CSV/Excel/PDF
+  ├─ If no file → Generate 150 dummy responses
+  └─ Convert to pandas DataFrame
+
+Step 3: STATISTICAL CALCULATION
+  ├─ Calculate averages (satisfaction, quality, service, value)
+  ├─ Calculate NPS (Net Promoter Score)
+  ├─ Calculate percentiles (25th, median, 75th)
+  ├─ Segment analysis (by age group, region)
+  └─ Sentiment analysis (positive/neutral/negative from feedback text)
+
+Step 4: VISUALIZATION GENERATION
+  ├─ Create 8 charts using matplotlib/seaborn:
+  │   ├─ Satisfaction distribution (histogram)
+  │   ├─ Metrics comparison (bar chart)
+  │   ├─ NPS distribution (pie chart)
+  │   ├─ Regional analysis (bar chart)
+  │   ├─ Age group analysis (grouped bar)
+  │   ├─ Recommendation distribution (histogram)
+  │   ├─ Time series trend (line chart)
+  │   └─ Metric correlations (heatmap)
+  └─ Save as single PNG file
+
+Step 5: AI REPORT GENERATION
+  ├─ Build report structure (KPIs, segments, data quality)
+  ├─ Call Gemini API 3 times:
+  │   ├─ Get executive summary
+  │   ├─ Get trend analysis
+  │   └─ Get strategic recommendations
+  ├─ Insert AI insights into report
+  └─ Save as survey_report.txt
+
+Step 6: DATA EXPORT
+  ├─ Export age group analysis → CSV
+  ├─ Export regional analysis → CSV
+  ├─ Export raw data → CSV
+  └─ Export statistics → JSON
+
+Step 7: OUTPUT EXPLANATION
+  ├─ Build comprehensive prompt with all output file details
+  ├─ Call Gemini API (4th call)
+  ├─ Get AI explanation of all files
+  └─ Save as output_explanation.txt
+
+
+3. PROCESS FLOW (Business Perspective)
+================================================================================
+
+USER ACTION → SYSTEM PROCESS → BUSINESS OUTPUT
+
+┌─────────────────────────────────────────────────────────────────┐
+│ USER RUNS: python main.py survey_data.csv                       │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ SYSTEM: Loads survey data (150 customer responses)              │
+│         Calculates metrics (NPS, satisfaction, etc.)            │
+│         Creates visual charts                                   │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ AI PROCESS: Gemini analyzes the numbers                         │
+│              Generates insights in plain English                │
+│              Provides actionable recommendations                │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ BUSINESS OUTPUT:                                                │
+│                                                                  │
+│  📊 Report with AI insights → "What the data means"             │
+│  📈 Visual dashboard → "See patterns at a glance"               │
+│  📋 Data files → "Detailed breakdowns"                          │
+│  📝 Explanation → "AI explains everything in business terms"    │
+│                                                                  │
+│  All saved in: outputs/analysis_YYYYMMDD_HHMMSS/               │
+└─────────────────────────────────────────────────────────────────┘
+
+
+4. KEY COMPONENTS
+================================================================================
+
+MODULE                    PURPOSE
+─────────────────────────────────────────────────────────────────
+main.py                   Entry point - orchestrates everything
+analyzer.py               Main class - coordinates all modules
+data_loader.py            Loads CSV/Excel/PDF or generates dummy data
+statistics.py             Calculates all metrics (NPS, averages, etc.)
+visualizations.py         Creates 8-chart dashboard
+report_generator.py       Builds report + calls Gemini for insights
+llm_providers.py          Connects to Gemini API
+config.py                 Settings (output paths, API key loading)
+
+
+5. AI INTEGRATION POINTS
+================================================================================
+
+GEMINI API CALLS (4 total per run):
+
+1. Executive Summary
+   Input:  Survey metrics (NPS, satisfaction, regions, etc.)
+   Output: 4-5 sentence business summary
+
+2. Trend Analysis
+   Input:  Detailed metrics with standard deviations
+   Output: 5-6 critical trends with explanations
+
+3. Strategic Recommendations
+   Input:  Performance gaps and NPS breakdown
+   Output: 6-8 actionable recommendations (immediate/short-term/long-term)
+
+4. Output Explanation
+   Input:  List of all generated files + chart descriptions
+   Output: Comprehensive business-friendly explanation of all outputs
+
+
+6. DATA TRANSFORMATIONS
+================================================================================
+
+RAW DATA (CSV/Excel/PDF)
+    ↓
+PANDAS DATAFRAME (structured data)
+    ↓
+STATISTICAL METRICS (dictionary with 20+ calculated values)
+    ↓
+VISUAL CHARTS (8 PNG charts)
+    ↓
+AI INSIGHTS (4 Gemini API responses)
+    ↓
+FINAL OUTPUTS (7 files in timestamped folder)
+
+
+================================================================================
+END OF DOCUMENT
+================================================================================
